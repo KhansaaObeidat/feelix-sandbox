@@ -1,36 +1,142 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend Production Readiness Validation
+
+This is a **Next.js** project bootstrapped with `create-next-app`, implemented as part of a sandbox technical validation task.
+
+The goal of this project is to demonstrate **production-ready frontend behavior** for a SaaS platform, focusing on:
+- Environment-based API configuration
+- Authentication-related flows
+- Secure API integration
+- Loading, error, and empty states
+- Clean and maintainable frontend code
+
+UI design is intentionally kept minimal and is not part of the evaluation.
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Running the Development Server
+
+Install dependencies and start the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open the application in your browser:
+```
+http://localhost:3000
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Configuration
 
-## Learn More
+API access is configured using environment variables.
 
-To learn more about Next.js, take a look at the following resources:
+Example `.env.local`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+NEXT_PUBLIC_API_URL=https://api.example.com
+NEXT_PUBLIC_ENV=development
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Notes
+- In Next.js, only variables prefixed with `NEXT_PUBLIC_` are exposed to client-side code; anything without the prefix is server-only.
+- Never store secrets in frontend env files (API keys, service credentials, long-lived tokens) because `NEXT_PUBLIC_` values are bundled and visible in the browser.
+- Dev/Staging/Prod differ mainly by API base URLs, feature flags, and security/observability settings (e.g., HTTPS, CSP, logging/monitoring).
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Implemented Features
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Dashboard Analytics
+- Fetches analytics data from `/api/analytics`
+- Supports query parameters (time, category, status)
+- Filter controls sync to the URL and refetch safely on change
+- Handles loading, empty, and error states
+- Validates the response shape before rendering to guard against backend drifts
+
+### Email / Phone Verification
+- Route: `/verify?token=xxxx`
+- Extracts token from URL query parameters
+- Automatically submits verification request on page load
+- Shows loading, success, and error states
+- Redirects to login on success
+- Displays "Resend verification" action on error
+
+### Forgot Password
+- Route: `/forgot-password`
+- Submits email to request password reset
+- Calls `POST /auth/password-reset-request`
+- Displays success message:
+  "Please check your email to reset your password."
+- Handles API errors gracefully
+
+### Reset Password Confirmation
+- Route: `/reset-password?token=xxxx`
+- Extracts token from URL query parameters
+- Displays a form with:
+  - New password
+  - Confirm password
+- Validates password match on the frontend
+- Submits to `POST /auth/password-reset-confirm`
+- Shows loading and error states
+- Redirects to login on successful API response
+
+---
+
+## Local Testing Notes
+
+No backend is provided as part of this sandbox task.
+Backend endpoints are assumed to exist as specified in the requirements.
+
+When running locally without a backend implementation:
+- API requests may fail (e.g., network error / 404 if no mock routes are added)
+- Error states are expected and are handled gracefully
+- Redirects occur only on successful API responses
+
+Note: The task only specifies `POST /auth/verify`, so the “Resend verification” action is implemented as a safe retry of the same verification request (no extra backend assumptions).
+
+---
+
+## Written Questions
+
+### 1. How do these flows behave differently in Development, Staging, and Production?
+- **Development:** Points to local/test APIs, verbose errors, feature flags enabled for faster iteration.
+- **Staging:** Mirrors production configs/URLs with test data, feature flags close to release settings, errors logged but minimally exposed to users.
+- **Production:** Real services and data, strict error redaction, HTTP-only auth cookies, CSP and HTTPS enforced, monitoring/alerts on failures.
+
+### 2. What frontend mistakes commonly break CI/CD pipelines?
+- TypeScript or ESLint errors.
+- Missing or misconfigured environment variables.
+- Incorrect import paths or case sensitivity issues.
+- Hardcoded environment-specific values.
+- Dependency or build configuration issues.
+
+### 3. How do you protect frontend code from backend API changes?
+- Centralizing API calls in a single service layer.
+- Using clear interfaces or types for API responses.
+- Handling loading, error, and empty states consistently.
+- Avoiding assumptions that backend responses are always valid.
+- Documenting assumptions and updating them when APIs change.
+
+### 4. How should tokens be handled safely in frontend authentication flows?
+- Avoid storing sensitive tokens in localStorage when possible.
+- Prefer HttpOnly cookies for authentication.
+- Tokens passed via URLs should be short-lived and never logged.
+- Do not expose tokens in console logs or error messages.
+- Always use HTTPS in staging and production environments.
+
+---
+
+## Test Routes
+
+- `/verify?token=test`
+- `/forgot-password`
+- `/reset-password?token=test`
+
+
+
+
