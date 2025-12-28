@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { apiService } from "../services/api-service";
+import FormStatusMessage from "../components/form-status-message";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -41,7 +42,6 @@ const ForgotPassword = () => {
   return (
     <div>
       <h1>Forgot Password</h1>
-
       <form onSubmit={handleSubmit}>
         <input
           type="email"
@@ -55,9 +55,9 @@ const ForgotPassword = () => {
           {loading ? "Sending..." : "Submit"}
         </button>
       </form>
-
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-      {successMessage && <p>{successMessage}</p>}
+      {!loading && (
+        <FormStatusMessage error={errorMessage} success={successMessage} />
+      )}{" "}
     </div>
   );
 };

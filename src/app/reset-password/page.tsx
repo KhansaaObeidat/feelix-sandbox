@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiService } from "../services/api-service";
+import FormStatusMessage from "../components/form-status-message";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -43,7 +44,9 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       setTimeout(() => router.push("/login"), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reset password.");
+      setError(
+        err instanceof Error ? err.message : "Failed to reset password."
+      );
     } finally {
       setLoading(false);
     }
@@ -77,7 +80,7 @@ export default function ResetPasswordPage() {
         </button>
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <FormStatusMessage error={error} />
     </div>
   );
 }
